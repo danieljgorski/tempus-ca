@@ -1,0 +1,299 @@
+---
+title: "Seurat: R toolkit for single-cell genomics"
+author: "Daniel J Gorski"
+date: "1-Dec-2022"
+output: 
+  html_document :
+    toc: true
+    toc_float: 
+      collapsed: true
+      smooth_scroll: true
+---
+
+## Prompt
+
+*Describe an R package that you use regularly. What are the most useful class/methods/functions? What are the limitations, gotchas, bugs in the package? Can you white-board a strategy that might work to improve the package? We are interested in how well you know your tools and how interested you are in improving stuff you use.*
+
+*Submit your notes, code blocks, explanation/demo as a markdown file or RStudio/RMarkdown to a public github repo and submit the url for review.*
+
+## Description
+
+### Overview
+
+The R package I use most frequently is [Seurat](https://satijalab.org/seurat/) for single-cell RNA sequencing (scRNA-seq) data analysis. Seurat is a toolkit develop by Rahul Satija's lab at the New York Genome Center and one of the most popular analysis packages for single-cell data due its excellent documentation and thorough vignettes. It also has the added benefit of being based in R, which many biologists and statisticians are familiar with. There are of course, other powerful and popular analysis packages/workflows such as:
+
+-   [scverse](https://scverse.org/)
+
+-   [Bioconductor](https://bioconductor.org/books/release/OSCA/)
+
+I believe Seurat is a popular option for many newcomers to single-cell analysis, not only because of the informative vignettes, but because the development team are considerate of the way that [most]{.underline} people, not only experts, will interact with and use their package. In this way I see Seurat as having the lowest barrier of entry, and one of the best places for beginners to start their journey with single-cell analysis. Their github issues page is actually a welcoming place, where many questions are answered not only about the inter workings of the library, but also about experimental design and best practices, [e.g. #2461](https://github.com/satijalab/seurat/issues/2461), currently they have over 5500 closed issues.
+
+Seurat also offers a number of built-in features such as, [multi-modal data analysis](https://satijalab.org/seurat/articles/multimodal_vignette.html), and the ability to analyze [spatial data sets](https://satijalab.org/seurat/articles/spatial_vignette.html) from 10x Visium and Slide-seq formats. They also have excellent options for [integration](https://satijalab.org/seurat/articles/integration_introduction.html), including the ability to integrate data from different modalities, and to annotate query data with pre-annotated references, aka "reference mapping".
+
+### Loading Seurat and example data
+
+```{r, warning=F, message=F}
+library(Seurat)
+library(SeuratData)
+library(tidyverse)
+data("ifnb") # you may need to run InstallData("ifnb") first
+ifnb
+```
+
+### Object structure
+
+The Seurat object is at the heart of the package, it contains all the necessary representations of the expression data as well as cell-level and feature-level metadata.
+
+```{r, echo=F, out.width='70%', out.height='70%', fig.align='center'}
+library(knitr)
+knitr::include_graphics('./images/object-structure.png')
+```
+
+The meta.data slot contains cell-level data, such as the total counts (nCounts) and unique features for each cell (nFeatures). It is also an convenient place to store new information, such as cluster annotations or gene signature scores.
+
+```{r, echo=F, out.width='70%', out.height='70%', fig.align='center'}
+library(knitr)
+knitr::include_graphics('./images/object-meta-data.png')
+```
+
+```{r}
+head(ifnb@meta.data)
+```
+
+Assays are individual representations of the expression data and are organized as (feature x observation) matrices (i.e. genes x cells). For example, the "RNA assay" is the default assay after object creation and will contain the raw count matrix. If sctransform normalization is performed on a data set, a new assay is created, the "SCT assay". Similarly if integration is performed an "Integrated assay" is created.
+
+```{r, echo=F, out.width='70%', out.height='70%', fig.align='center'}
+library(knitr)
+knitr::include_graphics('./images/object-assays.png')
+```
+
+Within each assay, transformations of the data exist as "slots". Its important to note, that based on your workflow (traditional normalization v. sctransform normalization) these slots will be different types transformations (i.e. uncorrected v. corrected).
+
+-   `scale.data` slot is a scaled matrix used for dimensional reduction and heatmaps.
+
+-   `data` slot is normalized data used for differential gene expression, marker ID, etc.
+
+-   `counts` slot is unnormalized raw count data.
+
+```{r, echo=F, out.width='70%', out.height='70%', fig.align='center'}
+library(knitr)
+knitr::include_graphics('./images/object-slots.png')
+```
+
+## Useful features
+
+### Options for integration
+
+In our research, we use scRNA-seq as a comparative method to explore differences in cell populations between wild-type and genetically modified mice. Therefore data integration is essential to ensure we are comparing shared cell populations across conditions, as well as removing unwanted batch effects.
+
+Often, in our experimental framework, the difference between conditions (e.g. WT v. KO) isn't very dramatic. So, we need workflows that allow us to retain biological heterogeneity across conditions, without overly-integrating the data and potentially hiding important differences. This of course puts a even more weight on the importance of validating our findings with other methods, but we are happy to do this. Luckily, Seurat provides multiple methods for data integration of various "strengths", that can be applied based on the experimental design or magnitude of response between control and experimental groups.
+
+The Seurat developers make an important note that their default integration workflow based on canonical correlation analysis (CCA), may in some cases lead to over-correction, pulling together cell states across conditions that shouldn't be aligned. Their alternative, reciprocal PCA (RPCA) based integration, is a more conservative method and is less likely to align cells in different biological states. In this method, each data set is projected into each others PCA space, and the anchors are then constrained by the same mutual neighborhood requirement. When designating a reference dataset, the comparisons are then limited to just the reference vs query and anchors are not identified between pairs of query datasets, yielding similar results with less compute time. This alternative approach is well suited to our work.
+
+Using the built in `ifnb` data set, which consists of control and interferon-stimulated PBMC, the following is a rudimentary comparison of workflows to highlight the differences between simple merging, CCA integration and reference-based RPCA integration.
+
+```{r, echo=F}
+options(future.globals.maxSize = 2000 * 1024^2)
+```
+
+```{r, warning=F, message=F, results='hide'}
+# Merge based workflow
+data("ifnb")
+merge_start <- Sys.time()
+ifnb.list <- SplitObject(ifnb, split.by = "stim")
+ifnb.list <- lapply(X = ifnb.list, FUN = SCTransform)
+variable_genes <- SelectIntegrationFeatures(object.list = ifnb.list)
+ifnb <- merge(x = ifnb.list[[1]], y = ifnb.list[[2]])
+VariableFeatures(ifnb) <- variable_genes
+ifnb <- RunPCA(ifnb, npcs = 50)
+ifnb <- RunUMAP(ifnb, reduction = "pca", dims = 1:25)
+ifnb <- FindNeighbors(ifnb, dims = 1:25)
+ifnb <- FindClusters(ifnb, resolution = 0.4)
+merge_end <- Sys.time()
+p1 <- DimPlot(ifnb, group.by = "stim") + labs(subtitle = "Merged") +
+  theme(plot.title = element_blank(), legend.position = "none")
+
+# CCA integration workflow
+data("ifnb")
+cca_start <- Sys.time()
+ifnb.list <- SplitObject(ifnb, split.by = "stim")
+ifnb.list <- lapply(X = ifnb.list, FUN = SCTransform)
+features <- SelectIntegrationFeatures(object.list = ifnb.list)
+ifnb.list <- PrepSCTIntegration(object.list = ifnb.list,
+                                anchor.features = features)
+anchors <- FindIntegrationAnchors(object.list = ifnb.list,
+                                  normalization.method = "SCT",
+                                  anchor.features = features,
+                                  dims = 1:25)
+ifnb <- IntegrateData(anchorset = anchors, normalization.method = "SCT")
+ifnb <- RunPCA(ifnb, npcs = 50)
+ifnb <- RunUMAP(ifnb, reduction = "pca", dims = 1:25)
+ifnb <- FindNeighbors(ifnb, dims = 1:25)
+ifnb <- FindClusters(ifnb, resolution = 0.4)
+cca_end <- Sys.time()
+p2 <- DimPlot(ifnb, group.by = "stim") + labs(subtitle = "CCA") +
+  theme(plot.title = element_blank(), legend.position = "none")
+
+# Reference based RPCA integration workflow
+data("ifnb")
+rpca_start <- Sys.time()
+ifnb.list <- SplitObject(ifnb, split.by = "stim")
+ifnb.list <- lapply(X = ifnb.list, FUN = SCTransform)
+features <- SelectIntegrationFeatures(object.list = ifnb.list)
+ifnb.list <- PrepSCTIntegration(object.list = ifnb.list, anchor.features = features)
+ifnb.list <- lapply(X = ifnb.list, FUN = RunPCA, features = features)
+anchors <- FindIntegrationAnchors(object.list = ifnb.list,
+                                  normalization.method = "SCT",
+                                  reference = 1, # index of control obj in ifnb.list
+                                  anchor.features = features,
+                                  dims = 1:25,
+                                  reduction = "rpca",
+                                  k.anchor = 5)
+ifnb <- IntegrateData(anchorset = anchors,
+                      normalization.method = "SCT",
+                      dims = 1:25)
+ifnb <- RunPCA(ifnb, npcs = 50)
+ifnb <- RunUMAP(ifnb, reduction = "pca", dims = 1:25)
+ifnb <- FindNeighbors(ifnb, dims = 1:25)
+ifnb <- FindClusters(ifnb, resolution = 0.4)
+rpca_end <- Sys.time()
+p3 <- DimPlot(ifnb, group.by = "stim") + labs(subtitle = "Reference-based RPCA") +
+  theme(plot.title = element_blank())
+```
+
+```{r, out.height='70%', out.width='100%'}
+# Compute time comparison
+df <- data.frame(method=c("Merged", "CCA", "RPCA"),
+           compute_time= c(merge_end-merge_start,
+                           cca_end-cca_start,
+                           rpca_end-rpca_start))
+print(df)
+
+# Integration comparison
+p1 + p2 + p3 
+```
+
+### Convenient functions
+
+`AddModuleScore()` is a very useful function to calculate the average expression of a list of genes. Great for showing gene signature / gene programs across clusters.
+
+```{r, warning=F, message=F, out.height='70%', out.width='100%'}
+# Normalize and scale the RNA assay
+DefaultAssay(ifnb) <- "RNA"
+ifnb <- ifnb %>% NormalizeData() %>% ScaleData()
+
+# Read in a list of genes from gene ontology biological processes
+gene_list <- read_csv(file = "data/gene_signatures.csv")
+interferon <- gene_list$response_to_type_I_interferon_GO.0034340
+
+# Genes have to be in a list
+interferon <- interferon %>% na.omit() %>% unique() %>% list()
+
+# Add the gene module score, this is stored in the metadata
+ifnb <- AddModuleScore(ifnb, features = interferon, ctrl = 20, name = "interferon")
+head(ifnb@meta.data)
+
+# Visualize the module score expression 
+FeaturePlot(ifnb, features = "interferon1", split.by = "stim")
+```
+
+`subset()` makes it easy to do sub analysis of certain clusters, or cells based on expression levels. Although this isn't a Seurat function, it works seamlessly with the Seurat objects.
+
+```{r, out.height='70%', out.width='100%'}
+# Subset cluster 0
+ifnb_sub <- subset(ifnb, idents = "0")
+
+# Plot the full object, and subset
+p1 <- DimPlot(ifnb, label = T)
+p2 <- DimPlot(ifnb_sub, label = T)
+p1 + p2
+```
+
+`LabelClusters()` is an adaptable function to customize DimPlot labeling, this makes interpretation much easier.
+
+```{r, out.height='70%', out.width='100%'}
+# DimPlot of basic annotation
+p <- DimPlot(ifnb,
+             reduction = "umap",
+             pt.size = .3,
+             label = F,
+             group.by = "seurat_annotations") +
+  xlab("UMAP-1") +
+  ylab("UMAP-2") +
+  labs(color = "Identity") +
+  theme(legend.text = element_text(size = 11),
+        legend.title = element_text(size = 15),
+        legend.justification = "top",
+        legend.key.size = unit(3, "point"),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.title = element_text(size = 16),
+        plot.title = element_blank()) +
+  guides(color = guide_legend(override.aes = list(size = 4.25),
+                              nrow = 20))
+LabelClusters(plot = p,
+              id = "seurat_annotations",
+              repel = T,
+              force = 0.25,
+              box = T,
+              fill = alpha("white", 0.45),
+              size = 4,
+              label.r = unit(0.25, "lines"),
+              label.size = NA)
+```
+
+object converstion()
+
+-Azimuth
+
+## Limitations
+
+-Speed, Scaling
+
+-ML integration (5-90x slower than scanpy Wolf et al. 2018)
+
+## Gotchas & Bugs
+
+-matrix is transposed v other utilities
+
+-Addmodulescore adds 1
+
+-SpatialDimPlot groupby doesnt work
+
+-Spatial FeaturePlot scaling
+
+## Improvements
+
+-Hidden default Idents and default Assays (DE performed on un-corrected data, scale.data only used for heatmaps etc..), Hard stops for calculating markers/dge on the wrong assay / slot, warning for plotting data with the wrong assay/slot
+
+-Clear recommendations on assay slot use depending on normalization/integration (SCTransform should not be used for marker gene ID, DGE unless the newest version is used) (Integrated assay
+
+-Subsetting on cells
+
+-Directly merge an object list
+
+-Integrated TI
+
+-Spatial analysis needs a hand drawn shiny plot, currently this must be done with coordinates!
+
+-Rename Idents should instantly stash metadata, currently this is temporary
+
+-FindMarkers is done by a certain order, and does clearly tell you what group is upregulated or not
+
+-Numerous DE methods, needs to be expanded for pseudo-bulk DE
+
+-Built-in cell cycle genes are murine, only human
+
+-Reference based between Human/mouse is TOUPPER based, not ortholog
+
+For the sake of "one-stop-shop"
+
+-Azimuth expansion with HCA and other references for automated annotation
+
+-Explicitly state the default ident, assay and slot, perhaps create warnings when non-standardized slots/assays are being used
+
+-Add a volcano plot
+
+```{r}
+sessionInfo()
+```
