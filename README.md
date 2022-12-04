@@ -4,6 +4,6 @@ The repository contains my completed exercises for the coding assessment given t
 
 To view my completed work for each prompt you can visit the links below, or find them in their respective folders within this repo.
 
-1. GNU stat command:
+1. GNU stat command: [gstat.md](https://github.com/danieljgorski/tempus-ca/blob/main/1-gnu-stat-command/gstat.md)
 2. Design a tool set in Julia:
-3. Describe an R package that you use regularly: [Seurat](https://danieljgorski.github.io/Seurat.html)
+3. Describe an R package that you use regularly: [Seurat.rmd](https://danieljgorski.github.io/Seurat.html)
