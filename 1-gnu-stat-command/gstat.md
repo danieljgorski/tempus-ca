@@ -7,17 +7,19 @@
 *See this stack overflow tip for more information:
 <https://apple.stackexchange.com/questions/69223/how-to-replace-mac-os-x-utilities-with-gnu-core-utilities>*
 
-*Create files, directories, and nested directories and monitor the stat information. Also pay attention to the inode information. Can you explain how “Links” increments and decrements for directories and files? What command can you use to target a file via inode number? What are the Links in an empty directory? How do stat links relate to the ln function? While investigating this system, what were the most useful/informative commands? Document all your discoveries, experiments including commands and their results in a markdown document and submit to a public github account. We are interested in how deeply you investigate, how organized and thorough your notes are.*
+*Create files, directories, and nested directories and monitor the stat information. Also pay attention to the inode information. Can you explain how “Links” increments and decrements for directories and files? What command can you use to target a file via inode number? What are the Links in an empty directory? How do stat links relate to the ln function? While investigating this system, what were the most useful/informative commands? Document all your discoveries, experiments including commands and their results in a markdown document and submit to a public github account. We are interested in how deeply you investigate, how organized and thorough your notes are.* .
 
 ## Installing GNU core utilities
 
-Installing GNU core utilites with the g prefix as indicated from the apple stackexhange posting.
+### Installation
+
+Installing GNU core utilites with the g prefix using `homebrew` as indicated from the apple stackexhange posting:
 
 ```zsh
 ~ ❯ brew install coreutils findutils gnu-tar gnu-sed gawk gnutls gnu-indent gnu-getopt grep
 ```
 
-Checking the install of coreutils
+Checking the install of `coreutils`:
 
 ```zsh
 ~ ❯ brew info coreutils
@@ -52,19 +54,64 @@ install-on-request: 53,888 (30 days), 174,080 (90 days), 844,527 (365 days)
 build-error: 68 (30 days)
 ```
 
-Quick trial of gstat command
+### Overview
+
+`gstat` command on a file:
 
 ```zsh
-~ ❯ gstat sciebo
-  File: sciebo
-  Size: 192       	Blocks: 0          IO Block: 4096   directory
-Device: 1,17	Inode: 3028652     Links: 6
-Access: (0700/drwx------)  Uid: (  501/danieljgorski)   Gid: (   20/   staff)
-Access: 2022-11-04 16:38:59.358660000 +0100
-Modify: 2022-04-29 10:35:10.006790278 +0200
-Change: 2022-04-29 10:35:10.006790278 +0200
- Birth: 2022-01-15 16:03:03.370073701 +0100
+~ ❯ gstat gene_signatures.csv
+  File: gene_signatures.csv
+  Size: 28288           Blocks: 56         IO Block: 4096   regular file
+Device: 1,17    Inode: 39680265    Links: 1
+Access: (0644/-rw-r--r--)  Uid: (  501/danieljgorski)   Gid: (   20/   staff)
+Access: 2022-12-04 16:16:12.479436278 +0100
+Modify: 2022-12-03 13:35:18.648377033 +0100
+Change: 2022-12-04 16:16:10.609054715 +0100
+ Birth: 2022-04-06 16:24:47.000000000 +0200
 ```
+
+This displays information about files and filesystems, with more detail than `ls -l`, including:
+- File - The name of the file.
+- Size - The size of the file in bytes.
+- Blocks - The number of allocated blocks the file takes.
+- IO Blocks - The size in bytes of every block.
+- File type - regular file, directory, or symbolic link.
+- Device - Device number in hex and decimal.
+- Inode - The Inode number.
+- Links - Number of hard links.
+- Access - File permissions displayed in octal and rwx format.
+- Uid - User ID and name of owner.
+- Gid - Group ID and name of owner.
+- Access - Last time the file was accessed, day, time, timezone.
+- Modify - Last time the file's *content* was modified.
+- Change - Last time the file's *attribute* was modified.
+- Birth - File creation.
+
+`gstat` can also be used to display information on a file system using the `-f` option:
+
+```zsh
+~ ❯ gstat -f gene_signatures.csv
+  File: "gene_signatures.csv"
+    ID: 10000110000001a Namelen: ?       Type: apfs
+Block size: 4096       Fundamental block size: 4096
+Blocks: Total: 242837545  Free: 33868868   Available: 33868868
+Inodes: Total: 1357041887 Free: 1354754720
+```
+
+This displays information on:
+
+- File - The name of the file.
+- ID - The file system ID in hex.
+- Namelen - The maximum length of file names.
+- Type - Type of file system
+- Fundamental block size - The size of each block in the file system.
+- Blocks:
+  - Total - Number of total blocks in the file system
+  - Free - Number of free blocks
+  - Available - Number of free blocks availble to non-root users
+- Inodes:
+  - Total - Number of total inodes in the file system.
+  - Free - Number of free inodes
 
 ## Creating files
 
