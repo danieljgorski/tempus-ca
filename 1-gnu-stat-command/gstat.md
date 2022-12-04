@@ -402,7 +402,7 @@ processed with newest pipeline
 
 ## Useful commands
 
-I imagine then, in practice, the combination of `gstat`, `gfind` and `gln` are very useful for seeing if a file of interest has associated linked files. Then using its inode number, you could find any linked file easily. Perhaps creating linked files that point to the same data (via hard links or symbolic links) could be also useful for multiple people who need access to the same data, and would like there reference to be updated as the original data is updated/moved.
+I imagine then, in practice, the combination of `gstat`, `gfind` and `gln` are very useful for seeing if a file of interest has associated linked files. Then using its inode number, you could find any linked file easily. Perhaps creating linked files that point to the same data (via hard links or symbolic links) could be also useful for multiple people who need access to the same data, and would like their reference to be updated as the original data is updated/moved.
 
 
 
