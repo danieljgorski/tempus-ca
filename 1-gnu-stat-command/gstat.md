@@ -1,4 +1,4 @@
-# GNU core utilities on macos
+# GNU core utilities on macOS
 
 ## Prompt
 
@@ -7,13 +7,13 @@
 *See this stack overflow tip for more information:
 <https://apple.stackexchange.com/questions/69223/how-to-replace-mac-os-x-utilities-with-gnu-core-utilities>*
 
-*Create files, directories, and nested directories and monitor the stat information. Also pay attention to the inode information. Can you explain how “Links” increments and decrements for directories and files? What command can you use to target a file via inode number? What are the Links in an empty directory? How do stat links relate to the ln function? While investigating this system, what were the most useful/informative commands? Document all your discoveries, experiments including commands and their results in a markdown document and submit to a public github account. We are interested in how deeply you investigate, how organized and thorough your notes are.* .
+*Create files, directories, and nested directories and monitor the stat information. Also pay attention to the inode information. Can you explain how “Links” increments and decrements for directories and files? What command can you use to target a file via inode number? What are the Links in an empty directory? How do stat links relate to the ln function? While investigating this system, what were the most useful/informative commands? Document all your discoveries, experiments including commands and their results in a markdown document and submit to a public github account. We are interested in how deeply you investigate, how organized and thorough your notes are.*
 
 ## Installing GNU core utilities
 
 ### Installation
 
-Installing GNU core utilites with the g prefix using `homebrew` as indicated from the apple stackexhange posting:
+Installing GNU core utilites with the g prefix using `homebrew` as indicated from the apple stackexhange posting. As mentioned in the prompt, as well as the dicussions on stackexchange, I believe keeping the g-prefix is a good idea, therefore I won't modify my `PATH` to use the commands without the prefix.
 
 ```zsh
 ~ ❯ brew install coreutils findutils gnu-tar gnu-sed gawk gnutls gnu-indent gnu-getopt grep
@@ -70,7 +70,8 @@ Change: 2022-12-04 16:16:10.609054715 +0100
  Birth: 2022-04-06 16:24:47.000000000 +0200
 ```
 
-This displays information about files and filesystems, with more detail than `ls -l`, including:
+`gstat` displays information about files and filesystems, with more detail than `ls -l`, including:
+
 - File - The name of the file.
 - Size - The size of the file in bytes.
 - Blocks - The number of allocated blocks the file takes.
@@ -111,11 +112,63 @@ This displays information on:
   - Available - Number of free blocks availble to non-root users
 - Inodes:
   - Total - Number of total inodes in the file system.
-  - Free - Number of free inodes
+  - Free - Number of free inodes.
 
 ## Creating files
 
-Monitor stat information, pay attention to inode
+Here I am creating a new empty file titled "contact-info.txt" in my home directory. Then using `gstat` to display its information:
+
+```zsh
+~ ❯ touch contact-info.txt
+~ ❯ gstat contact-info.txt 
+  File: contact-info.txt
+  Size: 0               Blocks: 0          IO Block: 4096   regular empty file
+Device: 1,17    Inode: 39683408    Links: 1
+Access: (0644/-rw-r--r--)  Uid: (  501/danieljgorski)   Gid: (   20/   staff)
+Access: 2022-12-04 16:39:19.649083657 +0100
+Modify: 2022-12-04 16:39:19.649083657 +0100
+Change: 2022-12-04 16:39:19.649083657 +0100
+ Birth: 2022-12-04 16:39:19.649083657 +0100
+```
+
+Some observations:
+
+- Its an empty file so the size is 0.
+- Interestingly, the type of file is "regular empty file", it can detect this, I didn't expect that.
+- Inode # is 39683408.
+- It has 1 link.
+
+Now I will add a bit of information to this file:
+
+```zsh
+~ ❯ echo 'danieljgorski@gmail.com' > contact-info.txt
+~ ❯ echo '+49 151-28791009' >> contact-info.txt
+~ ❯ cat contact-info.txt
+danieljgorski@gmail.com
++49 151-28791009
+```
+
+Then re-run `gstat` to monitor the changes:
+
+```zsh
+~ ❯ gstat contact-info.txt
+  File: contact-info.txt
+  Size: 41              Blocks: 8          IO Block: 4096   regular file
+Device: 1,17    Inode: 39683408    Links: 1
+Access: (0644/-rw-r--r--)  Uid: (  501/danieljgorski)   Gid: (   20/   staff)
+Access: 2022-12-04 16:46:45.501547836 +0100
+Modify: 2022-12-04 16:46:44.241117819 +0100
+Change: 2022-12-04 16:46:44.241117819 +0100
+ Birth: 2022-12-04 16:39:19.649083657 +0100
+```
+
+Some observations:
+
+- Size and Blocks have increased as expected.
+- Times of Access, Modify and Change have updated as expected.
+- Type has changed to regular file.
+- Links remain at 1.
+- Inode # is 39683408 this is unchanged as expected, since it is a unique number for this file.
 
 ## Creating directories
 
