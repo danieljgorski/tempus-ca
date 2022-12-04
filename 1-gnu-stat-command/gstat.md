@@ -55,7 +55,15 @@ build-error: 68 (30 days)
 Quick trial of gstat command
 
 ```zsh
-~ ❯ gstat
+~ ❯ gstat sciebo
+  File: sciebo
+  Size: 192       	Blocks: 0          IO Block: 4096   directory
+Device: 1,17	Inode: 3028652     Links: 6
+Access: (0700/drwx------)  Uid: (  501/danieljgorski)   Gid: (   20/   staff)
+Access: 2022-11-04 16:38:59.358660000 +0100
+Modify: 2022-04-29 10:35:10.006790278 +0200
+Change: 2022-04-29 10:35:10.006790278 +0200
+ Birth: 2022-01-15 16:03:03.370073701 +0100
 ```
 
 ## Creating files
