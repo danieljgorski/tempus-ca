@@ -34,7 +34,7 @@ julia> "bioinformatics" ▷ uppercase
 julia> "apple" ▷ length
 5
 ```
-See also [`complement`](@ref) [`reverse`](@ref) [`transcription`](@ref) [`dsDNA`](@ref) [`uppercase`](@ref) [`length`](@ref)
+See also [`complement`](@ref) [`reverse`](@ref) [`transcribe`](@ref) [`dsDNA`](@ref) [`uppercase`](@ref) [`length`](@ref)
 """
 ▷ = |>
 
@@ -65,7 +65,7 @@ julia> "gattaca" ▷ complement
 julia> "gattaca" ▷ reverse ▷ complement
 "tgtaatc"
 ```
-See also [`▷`](@ref) [`reverse`](@ref) [`transcription`](@ref) [`dsDNA`](@ref) 
+See also [`▷`](@ref) [`reverse`](@ref) [`transcribe`](@ref) [`dsDNA`](@ref) 
 """
 function complement(sequence)
 	if !contains(sequence, r"[^atgcATGC]")
@@ -78,8 +78,8 @@ end
 
 # ╔═╡ 19302051-e4e1-4f59-8c91-df6923f81c89
 """
-    transcription(sequence)
-	sequence ▷ transcription
+    transcribe(sequence)
+	sequence ▷ transcribe
 
 Return the RNA transcript of a coding strand DNA sequence.
 
@@ -93,15 +93,15 @@ Return the RNA transcript of a coding strand DNA sequence.
 
 ### Examples
 ```julia-repl
-julia> transcription("gattaca")
+julia> transcribe("gattaca")
 "gauuaca"
 
-julia> "gattaca" ▷ transcription
+julia> "gattaca" ▷ transcribe
 "gauuaca"
 ```
 See also [`▷`](@ref) [`complement`](@ref) [`reverse`](@ref) [`dsDNA`](@ref)
 """
-function transcription(sequence)
+function transcribe(sequence)
 	if !contains(sequence, r"[^atgcATGC]")
 		sequence = replace(sequence, "t"=>"u", "T"=>"U")
 		return sequence
@@ -115,7 +115,7 @@ end
     dsDNA(sequence)
 	sequence ▷ dsDNA
 
-Returns plain text of double stranded DNA sequence from a single strand input.
+Returns plain text of a double stranded DNA sequence from a single strand input.
 
 ### Arguments
 - `sequence`: string representing DNA.
@@ -135,7 +135,7 @@ julia> "gattaca" ▷ dsDNA
 gattaca
 ctaatgt
 ```
-See also [`▷`](@ref) [`complement`](@ref) [`reverse`](@ref) [`transcription`](@ref) [`Text`](@ref)
+See also [`▷`](@ref) [`complement`](@ref) [`reverse`](@ref) [`transcribe`](@ref) [`Text`](@ref)
 """
 function dsDNA(sequence)
 	if !contains(sequence, r"[^atgcATGC]")
@@ -160,7 +160,7 @@ end
 "atcgatGGGatctgac" ▷ reverse ▷ complement
 
 # ╔═╡ 73da8ab5-cffd-4737-a0ab-aa43da066614
-"atcgatGGGatctgac" ▷ transcription
+"atcgatGGGatctgac" ▷ transcribe
 
 # ╔═╡ 2fd56d7b-8d11-421d-b371-9c3fcb9b9ce4
 "atcgatGGGatctgac" ▷ dsDNA
