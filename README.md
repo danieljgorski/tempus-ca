@@ -6,4 +6,4 @@ To view my completed work for each prompt you can visit the links below, or find
 
 1. GNU stat command: [gstat.md](https://github.com/danieljgorski/tempus-ca/blob/main/1-gnu-stat-command/gstat.md)
 2. Design a tool set in Julia: [tool-set.jl.html](https://danieljgorski.github.io/tool-set.jl.html)
-3. Describe an R package that you use regularly: [Seurat.rmd](https://danieljgorski.github.io/Seurat.html)
+3. Describe an R package that you use regularly: [Seurat.html](https://danieljgorski.github.io/Seurat.html)
