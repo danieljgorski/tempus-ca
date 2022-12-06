@@ -78,7 +78,7 @@ knitr::include_graphics('./images/object-assays.png')
 
 #### Assay slots
 
-Within each assay, transformations of the data exist as "slots". Its important to note, that based on your workflow (traditional normalization v. sctransform normalization) these slots will be different types transformations (i.e. uncorrected v. corrected).
+Within each assay, transformations of the data exist as "slots". It's important to note, that based on your workflow (traditional normalization v. sctransform normalization) these slots will be different types transformations (i.e. uncorrected v. corrected).
 
 -   `scale.data` slot is a scaled matrix used for dimensional reduction and heatmaps.
 
@@ -374,7 +374,7 @@ adata.shape
 
 ### Module score naming
 
-`Addmodulescore()` adds a "1" to the input `name` argument when its saved in the metadata. This is annoying because it prevents you from easily looping through a set of genes and simultaneously plotting them using the same input name. I believe this is a safety measure that prevents you from over-writing metadata columns with similar names, but overall its unnecessary in my eyes, and should be more straight forward to allow easier plotting.
+`Addmodulescore()` adds a "1" to the input `name` argument when it's saved in the metadata. This is annoying because it prevents you from easily looping through a set of genes and simultaneously plotting them using the same input name. This is likely a safety measure that prevents metadata from being overwritten, but is unnecessary, and should be more straight forward to allow easier plotting.
 
 ```{r, warning=F, message=F, out.height='70%', out.width='100%'}
 # Read in GO term gene lists
@@ -398,7 +398,7 @@ FeaturePlot(ifnb, features="GO.0045655_regulation_of_monocyte_differentiation1")
 
 Another annoying bug I have come across is trying to plot features on multiple slices of spatial resolved data. Using `SpatialFeaturePlot()` on a spatial object with more than one slice does not display the feature expression on the same scale for each slice. This is makes comparisons between the slices impossible.
 
-Below is a demonstration of this with a 10x Visium data set from our lab. It consists of cardiac tissue 24 h after sham surgery or ischemia reperfusion (IR). It is available for you to download [here](https://uni-duesseldorf.sciebo.de/s/SjVwAKYp2UMRxXo) if you want to fully reproduce this notebook. Its been processed with an integrated workflow using sctransform normalization, which is documented [here](https://github.com/danieljgorski/spatial-24h).
+Below is a demonstration of this with a 10x Visium data set from our lab. It consists of cardiac tissue 24 h after sham surgery or ischemia reperfusion (IR). It is available for you to download [here](https://uni-duesseldorf.sciebo.de/s/SjVwAKYp2UMRxXo) if you want to fully reproduce this notebook. It has been processed with an integrated workflow using sctransform normalization, which is documented [here](https://github.com/danieljgorski/spatial-24h).
 
 ```{r, warning=F, message=F, fig.align='center'}
 # Load data
@@ -431,7 +431,7 @@ SpatialFeaturePlotScaled(object = hearts,
 
 ### Best practice warnings
 
-Seurat workflows have been consistently expanded to include new analysis techniques such as sctransform normalization and integration. However, when using these techniques its not always clear to new users that they create corrected expression data, and the results are not suited for some downstream analyses. Specifically differential gene expression analysis and visualization.
+Seurat workflows have been consistently expanded to include new analysis techniques such as sctransform normalization and integration. However, when using these techniques it's not always clear to new users that they create corrected expression data, and the results are not suited for some downstream analyses. Specifically differential gene expression analysis and visualization.
 
 It's an accepted [best practice](https://www.embopress.org/doi/full/10.15252/msb.20188746) that differential gene expression, including cluster marker identification, should be performed on the normalized, un-corrected data layer. When running sctransform or integration workflows, the default Seurat object assay is set to "SCT" or "integrated" respectively. The user must then reset the default assay to "RNA", and perform normalization and scaling before performing marker detection, differential gene expression and feature plotting. This step is easily omitted as it's not part of the integration and sctransform vignettes, which may lead to spurious results.
 
@@ -520,7 +520,7 @@ While Seurat does allow users to subset out anatomical regions, currently this i
 
 ```{r, fig.align='center'}
 # Entire IR heart
-p1 <-SpatialDimPlot(hearts, images = "IR", crop = F) + labs(title = "Full")
+p1 <- SpatialDimPlot(hearts, images = "IR", crop = F) + labs(title = "Full")
 
 # Subset IR heart based on coordinates
 hearts_sub <- subset(hearts, ir_imagerow > 800 | ir_imagecol < 380, invert = TRUE)
