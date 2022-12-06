@@ -84,7 +84,7 @@ Change: 2022-12-04 16:16:10.609054715 +0100
 - Change - Last time the file's *attribute* was modified.
 - Birth - File creation.
 
-`gstat` can also be used to display information on a file system using the `-f` option:
+`gstat` can also be used to display information on a file system using the `-f` flag:
 
 ```zsh
 ~ ❯ gstat -f gene_signatures.csv
@@ -129,7 +129,7 @@ Change: 2022-12-04 16:39:19.649083657 +0100
 
 Notes:
 
-- Its an empty file so the size is 0.
+- It's an empty file so the size is 0.
 - Interestingly, the type of file is "regular empty file", it can detect this, I didn't expect that.
 - Inode # is 39683408.
 - It has 1 link.
@@ -197,11 +197,11 @@ Notes:
   
 - `..` is pointing to the parent directory
 
-- This makes it easy to move around the file system e.g. using `cd ..` will move you up to parent directory.
+- This makes it easy to move around the file system, e.g. using `cd ..` will move you up to parent directory.
 
 ## Creating nested directories
 
-Here I am making a nested directory with the `-p` flag which will create the parent directories if they do not already exsist, and brace expansion, which will create the subdirectories.
+Here I am making nested directories with the `-p` flag which will create the parent directories if they do not already exsist, and brace expansion, which will create the subdirectories.
 
 ```zsh
 ~ ❯ mkdir -p ngs/single-cell/{atac-seq,cite-seq,rna-seq/{processed,raw}}  
@@ -244,7 +244,7 @@ Notes:
   ┃ ┃ ┗ raw (39709710)
   ```
 
-- Confirmed this by using `gstat` on every dir:
+- I confirmed this by using `gstat` on every dir:
 
   ```zsh
   ~ ❯ gstat ngs
@@ -392,7 +392,7 @@ Edit it further:
 ~/ngs ❯ echo "processed with newest pipeline" >> single-cell/atac-seq/project1-metadata.txt 
 ```
 
-Then display the changes by `cat` of the hard linked file:
+Then display the changes using `cat` on the hard linked file:
 
 ```zsh
 ~/ngs ❯ cat single-cell/rna-seq/project1-metadata-hardlink.txt 
@@ -402,4 +402,4 @@ processed with newest pipeline
 
 ## Useful commands
 
-I imagine then, in practice, the combination of `gstat`, `gfind` and `gln` are very useful for seeing if a file of interest has associated linked files. Then using its inode number, you could find any linked file easily. Perhaps creating linked files that point to the same data (via hard links or symbolic links) could be also useful for multiple people who need access to the same data, and would like their reference to be updated as the original data is updated/moved.
+I imagine, in practice, the combination of `gstat`, `gfind` and `gln` are very useful for seeing if a file of interest has associated linked files. Then using its inode number, you could find any linked file. Perhaps creating linked files that point to the same data (via hard links or symbolic links) could be also useful for multiple people who need access to the same data, and would like their reference to be updated as the original data is updated/moved.
