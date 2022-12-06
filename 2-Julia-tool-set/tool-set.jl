@@ -38,6 +38,41 @@ See also [`complement`](@ref) [`reverse`](@ref) [`transcribe`](@ref) [`dsDNA`](@
 """
 ▷ = |>
 
+# ╔═╡ ff5a022b-363e-46ae-bd5d-1c50676acaf5
+"""
+    isDNA(sequence)
+	sequence ▷ isDNA
+
+Return a boolean value if a string is DNA, i.e. only contains a,t,c,g,A,T,C,G characters.
+
+### Arguments
+- `sequence`: string representing DNA.
+
+### Notes
+- Takes uppper case and lower case characters.
+- Does not handle Ns (unidentified nucleotides)
+
+### Examples
+```julia-repl
+julia> isDNA("gattaca")
+true
+
+julia> "gattaca" ▷ isDNA
+true
+
+julia> "cgaauuaca" ▷ isDNA
+flase
+```
+See also [`▷`](@ref) [`isDNA`](@ref) [`reverse`](@ref) [`transcribe`](@ref) [`dsDNA`](@ref) 
+"""
+function isDNA(sequence)
+	if contains(sequence, r"[^atgcATGC]")
+		return false
+	else 
+		return true
+	end
+end
+
 # ╔═╡ bf9289df-d57e-47d6-9b86-a7230a487def
 """
     complement(sequence)
@@ -65,12 +100,12 @@ julia> "gattaca" ▷ complement
 julia> "gattaca" ▷ reverse ▷ complement
 "tgtaatc"
 ```
-See also [`▷`](@ref) [`reverse`](@ref) [`transcribe`](@ref) [`dsDNA`](@ref) 
+See also [`▷`](@ref) [`isDNA`](@ref) [`reverse`](@ref) [`transcribe`](@ref) [`dsDNA`](@ref) 
 """
 function complement(sequence)
-	if !contains(sequence, r"[^atgcATGC]")
+	if isDNA(sequence)
 		sequence = replace(sequence, "a"=>"t", "t"=>"a", "g"=>"c", "c"=>"g", "A"=>"T", "T"=>"A", "G"=>"C", "C"=>"G")
-		return sequence
+		return sequence		
 	else
 		print("Warning: Input contains unknown DNA nucleotides.")
 	end
@@ -99,10 +134,10 @@ julia> transcribe("gattaca")
 julia> "gattaca" ▷ transcribe
 "gauuaca"
 ```
-See also [`▷`](@ref) [`complement`](@ref) [`reverse`](@ref) [`dsDNA`](@ref)
+See also [`▷`](@ref) [`isDNA`](@ref) [`complement`](@ref) [`reverse`](@ref) [`dsDNA`](@ref)
 """
 function transcribe(sequence)
-	if !contains(sequence, r"[^atgcATGC]")
+	if isDNA(sequence)
 		sequence = replace(sequence, "t"=>"u", "T"=>"U")
 		return sequence
 	else
@@ -135,10 +170,10 @@ julia> "gattaca" ▷ dsDNA
 gattaca
 ctaatgt
 ```
-See also [`▷`](@ref) [`complement`](@ref) [`reverse`](@ref) [`transcribe`](@ref) [`Text`](@ref)
+See also [`▷`](@ref) [`isDNA`](@ref) [`complement`](@ref) [`reverse`](@ref) [`transcribe`](@ref) [`Text`](@ref)
 """
 function dsDNA(sequence)
-	if !contains(sequence, r"[^atgcATGC]")
+	if isDNA(sequence)
 		upper = sequence 
 		lower = sequence ▷ complement
 		return (upper * "\n" * lower) ▷ Text
@@ -147,30 +182,207 @@ function dsDNA(sequence)
 	end
 end
 
+# ╔═╡ d4116a0b-1875-432b-a031-e924393b0224
+"""
+    sgc (standard genetic code)
+
+Dictionary of RNA codons and their matching single letter amino acid counterparts.
+
+Adpated from [wikipedia](https://en.wikipedia.org/wiki/DNA_and_RNA_codon_tables#cite_note-12).
+### Usage
+To be used on conjunction with [`translate`](@ref).
+"""
+sgc = Dict(
+	"UUU"=>"F",
+	"UUC"=>"F",
+	"UUA"=>"L",
+	"UUG"=>"L",
+	"CUU"=>"L",
+	"CUC"=>"L",
+	"CUA"=>"L",
+	"CUG"=>"L",
+	"AUU"=>"I",
+	"AUC"=>"I",
+	"AUA"=>"I",
+	"AUG"=>"M", # start codon
+	"GUU"=>"V",
+	"GUC"=>"V",
+	"GUA"=>"V",
+	"GUG"=>"V",
+	"UCU"=>"S",
+	"UCC"=>"S",
+	"UCA"=>"S",
+	"UCG"=>"S",
+	"CCU"=>"P",
+	"CCC"=>"P",
+	"CCA"=>"P",
+	"CCG"=>"P",
+	"ACU"=>"T",
+	"ACC"=>"T",
+	"ACA"=>"T",
+	"ACG"=>"T",
+	"GCU"=>"A",
+	"GCC"=>"A",
+	"GCA"=>"A",
+	"GCG"=>"A",
+	"UAU"=>"Y",
+	"UAC"=>"Y",
+	"UAA"=>"_", # stop codon
+	"UAG"=>"_", # stop codon
+	"CAU"=>"H",
+	"CAC"=>"H",
+	"CAA"=>"Q",
+	"CAG"=>"Q",
+	"AAU"=>"N",
+	"AAC"=>"N",
+	"AAA"=>"K",
+	"AAG"=>"K",
+	"GAU"=>"D",
+	"GAC"=>"D",
+	"GAA"=>"E",
+	"GAG"=>"E",
+	"UGU"=>"C",
+	"UGC"=>"C",
+	"UGA"=>"_", # stop codon
+	"UGG"=>"W",
+	"CGU"=>"R",
+	"CGC"=>"R",
+	"CGA"=>"R",
+	"CGG"=>"R",
+	"AGU"=>"S",
+	"AGC"=>"S",
+	"AGA"=>"R",
+	"AGG"=>"R",
+	"GCU"=>"G",
+	"GGC"=>"G",
+	"GGA"=>"G",
+	"GGG"=>"G")
+
+# ╔═╡ 5b655dc1-c79d-40b7-b103-21f199edbdeb
+"""
+    translate(sequence)
+	sequence ▷ translate
+
+Returns the single-letter amino acid translation of a DNA sequence.
+
+### Arguments
+- `sequence`: string representing DNA.
+
+### Notes
+- Assumes the input is a 5'->3' coding strand DNA. 
+- Searches for the first occuring standard start codon (ATG), then begins translation.
+- If no start codons are present, no results are returned and a warning is printed.
+- Stops translation at stop codons.
+- If non-DNA nucleotide characters are present, no results are returned and a warning is printed.
+
+### Tips
+If you are pasting in FASTA sequences that contain newlines `\\n\` remove them first, e.g. 
+
+`sequence = replace(sequence, "\\n\" => "")`
+
+### Examples
+```julia-repl
+julia> translate("atggattacaggtga")
+"MDYR"
+
+julia> "atggattacaggtga" ▷ translate
+"MDYR"
+```
+See also [`▷`](@ref) [`sgc`](@ref) [`isDNA`](@ref) [`complement`](@ref) [`reverse`](@ref) [`transcribe`](@ref) 
+"""
+function translate(sequence)
+	if isDNA(sequence)
+		sequence = uppercase(sequence)
+		sequence = transcribe(sequence)
+		if match(r"AUG.*", sequence) == nothing
+			print("Standard start codon not found.")
+		else
+			protein = []
+			orf = match(r"AUG.*", sequence)
+			codons = collect(eachmatch(r"(.{3})", orf.match, overlap = false))
+			for i in range(1, length((codons)))
+				codon = codons[i]
+				amino_acid = replace(codon.match, sgc...)
+				push!(protein, amino_acid)
+			end
+			protein = join(protein)
+			protein = replace(protein, r"_.*" => "") # remove AAs after stop codons
+			return protein
+		end
+	else
+		print("Warning: Input contains unknown DNA nucleotides.")
+	end
+end
+
 # ╔═╡ b88f9a87-373b-4e2f-b0dc-7817d19d4550
-# Demonstrations
+# Demo
+sequence = "atcgatGGGatctgac"
+
+# ╔═╡ ab4f87c6-a679-45a5-9f09-f58dbc14bcd9
+sequence ▷ isDNA
 
 # ╔═╡ 5cf61dde-41f1-4360-9634-cc54554c74cb
-"atcgatGGGatctgac" ▷ complement
+sequence ▷ complement
 
 # ╔═╡ 9bd72c33-8917-4400-b123-cf18852b52e3
-"atcgatGGGatctgac" ▷ reverse
+sequence ▷ reverse
 
 # ╔═╡ 0868e215-4cde-4585-a197-15ce32f3675f
-"atcgatGGGatctgac" ▷ reverse ▷ complement
+sequence ▷ reverse ▷ complement
 
 # ╔═╡ 73da8ab5-cffd-4737-a0ab-aa43da066614
-"atcgatGGGatctgac" ▷ transcribe
+sequence ▷ transcribe
 
 # ╔═╡ 2fd56d7b-8d11-421d-b371-9c3fcb9b9ce4
-"atcgatGGGatctgac" ▷ dsDNA
+sequence ▷ dsDNA
+
+# ╔═╡ 1be59bdf-82ac-48c5-999a-fb614ad9fccf
+sequence ▷ translate
+
+# ╔═╡ e955f658-dd39-4c79-8e4b-47d85b2eab2c
+# Real world demo
+
+# Sequence of insulin from https://www.ncbi.nlm.nih.gov/nuccore/NC_000011.10?report=fasta&from=2159779&to=2161209&strand=true
+
+# Surprisingly short output. But the translate functionw will find the first standard start codon, and the first stop codon. So it will not be able to find the best open reading frame.
+
+# If you plug this same insulin sequence into https://web.expasy.org/translate/, "Frame 3" that is returned has the same results as this.
+
+begin
+	insulin =
+	"""
+	AGCCCTCCAGGACAGGCTGCATCAGAAGAGGCCATCAAGCAGGTCTGTTCCAAGGGCCTTTGCGTCAGGT
+	GGGCTCAGGATTCCAGGGTGGCTGGACCCCAGGCCCCAGCTCTGCAGCAGGGAGGACGTGGCTGGGCTCG
+	TGAAGCATGTGGGGGTGAGCCCAGGGGCCCCAAGGCAGGGCACCTGGCCTTCAGCCTGCCTCAGCCCTGC
+	CTGTCTCCCAGATCACTGTCCTTCTGCCATGGCCCTGTGGATGCGCCTCCTGCCCCTGCTGGCGCTGCTG
+	GCCCTCTGGGGACCTGACCCAGCCGCAGCCTTTGTGAACCAACACCTGTGCGGCTCACACCTGGTGGAAG
+	CTCTCTACCTAGTGTGCGGGGAACGAGGCTTCTTCTACACACCCAAGACCCGCCGGGAGGCAGAGGACCT
+	GCAGGGTGAGCCAACTGCCCATTGCTGCCCCTGGCCGCCCCCAGCCACCCCCTGCTCCTGGCGCTCCCAC
+	CCAGCATGGGCAGAAGGGGGCAGGAGGCTGCCACCCAGCAGGGGGTCAGGTGCACTTTTTTAAAAAGAAG
+	TTCTCTTGGTCACGTCCTAAAAGTGACCAGCTCCCTGTGGCCCAGTCAGAATCTCAGCCTGAGGACGGTG
+	TTGGCTTCGGCAGCCCCGAGATACATCAGAGGGTGGGCACGCTCCTCCCTCCACTCGCCCCTCAAACAAA
+	TGCCCCGCAGCCCATTTCTCCACCCTCATTTGATGACCGCAGATTCAAGTGTTTTGTTAAGTAAAGTCCT
+	GGGTGACCTGGGGTCACAGGGTGCCCCACGCTGCCTGCCTCTGGGCGAACACCCCATCACGCCCGGAGGA
+	GGGCGTGGCTGCCTGCCTGAGTGGGCCAGACCCCTGTCGCCAGGCCTCACGGCAGCTCCATAGTCAGGAG
+	ATGGGGAAGATGCTGGGGACAGGCCCTGGGGAGAAGTACTGGGATCACCTGTTCAGGCTCCCACTGTGAC
+	GCTGCCCCGGGGCGGGGGAAGGAGGTGGGACATGTGGGCGTTGGGGCCTGTAGGTCCACACCCAGTGTGG
+	GTGACCCTCCCTCTAACCTGGGTCCAGCCCGGCTGGAGATGGGTGGGAGTGCGACCTAGGGCTGGCGGGC
+	AGGCGGGCACTGTGTCTCCCTGACTGTGTCCTCCTGTGTCCCTCTGCCTCGCCGCTGTTCCGGAACCTGC
+	TCTGCGCGGCACGTCCTGGCAGTGGGGCAGGTGGAGCTGGGCGGGGGCCCTGGTGCAGGCAGCCTGCAGC
+	CCTTGGCCCTGGAGGGGTCCCTGCAGAAGCGTGGCATTGTGGAACAATGCTGTACCAGCATCTGCTCCCT
+	CTACCAGCTGGAGAACTACTGCAACTAGACGCAGCCCGCAGGCAGCCCCACACCCGCCGCCTCCTGCACC
+	GAGAGAGATGGAATAAAGCCCTTGAACCAGC
+	""" 
+	insulin_clean = replace(insulin, "\n" => "") # remove new lines
+	insulin_clean ▷ translate
+end
 
 # ╔═╡ 8612acd0-5cd6-4001-a0c0-124ff2d6e74e
  # Final notes
 
 # I didn't have time to get into how to specify the input and return data types for the functions. The "sequence" variable could have be written as e.g. "sequence::AbstractString" to further specify the functions use.
 
-# I didn't have time to build a translate function
+# For sure there is a better way to store or access the dictionary of codon-amino acid pairs, but I also thought that is outside the scope of the prompt.
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -191,15 +403,21 @@ project_hash = "da39a3ee5e6b4b0d3255bfef95601890afd80709"
 # ╔═╡ Cell order:
 # ╠═facd39d0-7497-11ed-198e-37bc7791a4eb
 # ╠═02563e16-20cf-4333-aa76-d88898dc397c
+# ╠═ff5a022b-363e-46ae-bd5d-1c50676acaf5
 # ╠═bf9289df-d57e-47d6-9b86-a7230a487def
 # ╠═19302051-e4e1-4f59-8c91-df6923f81c89
 # ╠═26905b39-29f0-4f2f-aa7a-6e16ddd87640
+# ╠═d4116a0b-1875-432b-a031-e924393b0224
+# ╠═5b655dc1-c79d-40b7-b103-21f199edbdeb
 # ╠═b88f9a87-373b-4e2f-b0dc-7817d19d4550
+# ╠═ab4f87c6-a679-45a5-9f09-f58dbc14bcd9
 # ╠═5cf61dde-41f1-4360-9634-cc54554c74cb
 # ╠═9bd72c33-8917-4400-b123-cf18852b52e3
 # ╠═0868e215-4cde-4585-a197-15ce32f3675f
 # ╠═73da8ab5-cffd-4737-a0ab-aa43da066614
 # ╠═2fd56d7b-8d11-421d-b371-9c3fcb9b9ce4
+# ╠═1be59bdf-82ac-48c5-999a-fb614ad9fccf
+# ╠═e955f658-dd39-4c79-8e4b-47d85b2eab2c
 # ╠═8612acd0-5cd6-4001-a0c0-124ff2d6e74e
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
