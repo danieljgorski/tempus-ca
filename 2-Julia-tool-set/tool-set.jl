@@ -34,7 +34,7 @@ julia> "bioinformatics" ▷ uppercase
 julia> "apple" ▷ length
 5
 ```
-See also [`complement`](@ref) [`reverse`](@ref) [`transcribe`](@ref) [`dsDNA`](@ref) [`uppercase`](@ref) [`length`](@ref)
+See also [`complement`](@ref) [`reverse`](@ref) [`transcribe`](@ref) [`dsDNA`](@ref) [`uppercase`](@ref) [`length`](@ref) [`translate`](@ref)
 """
 ▷ = |>
 
@@ -43,14 +43,14 @@ See also [`complement`](@ref) [`reverse`](@ref) [`transcribe`](@ref) [`dsDNA`](@
     isDNA(sequence)
 	sequence ▷ isDNA
 
-Return a boolean value if a string is DNA, i.e. only contains a,t,c,g,A,T,C,G characters.
+Tests if a string contains *only* DNA characters, i.e., a, t, c, g, A, T, C, G, returns a boolean value.
 
 ### Arguments
-- `sequence`: string representing DNA.
+- `sequence`: a string representing DNA.
 
 ### Notes
-- Takes uppper case and lower case characters.
-- Does not handle Ns (unidentified nucleotides)
+- Takes upper case and lower case characters.
+- Does not handle unidentified nucleotides (Ns)
 
 ### Examples
 ```julia-repl
@@ -61,9 +61,9 @@ julia> "gattaca" ▷ isDNA
 true
 
 julia> "cgaauuaca" ▷ isDNA
-flase
+false
 ```
-See also [`▷`](@ref) [`isDNA`](@ref) [`reverse`](@ref) [`transcribe`](@ref) [`dsDNA`](@ref) 
+See also [`▷`](@ref) [`complement`](@ref) [`reverse`](@ref) [`transcribe`](@ref) [`dsDNA`](@ref) [`translate`](@ref)
 """
 function isDNA(sequence)
 	if contains(sequence, r"[^atgcATGC]")
@@ -81,12 +81,12 @@ end
 Return the complement of a DNA sequence.
 
 ### Arguments
-- `sequence`: string representing DNA.
+- `sequence`: a string representing DNA.
 
 ### Notes
 - Assuming the input sequence is conventional, i.e., 5'->3', the returned output will be 3'->5' from left to right.
-- If non-DNA nucleotide characters are present, no results are returned and a warning is printed.
-- Can be used with `reverse` to generate the reverse-complement of a sequence, if it contains an ORF on the reverse strand.
+- If non-DNA nucleotide characters are present, no results are returned, and a warning is printed.
+- Can be used with `reverse` to generate the reverse complement of a sequence if it contains an ORF on the reverse strand.
 - Preserves letter case
 
 ### Examples
@@ -100,7 +100,7 @@ julia> "gattaca" ▷ complement
 julia> "gattaca" ▷ reverse ▷ complement
 "tgtaatc"
 ```
-See also [`▷`](@ref) [`isDNA`](@ref) [`reverse`](@ref) [`transcribe`](@ref) [`dsDNA`](@ref) 
+See also [`▷`](@ref) [`isDNA`](@ref) [`reverse`](@ref) [`transcribe`](@ref) [`dsDNA`](@ref) [`translate`](@ref)
 """
 function complement(sequence)
 	if isDNA(sequence)
@@ -119,11 +119,11 @@ end
 Return the RNA transcript of a coding strand DNA sequence.
 
 ### Arguments
-- `sequence`: string representing DNA.
+- `sequence`: a string representing DNA.
 
 ### Notes
 - Assuming the input sequence is conventional, i.e., 5'->3' coding strand, the resulting RNA sequence will be 5'->3' from left to right.
-- If non-DNA nucleotide characters are present, no results are returned and a warning is printed.
+- If non-DNA nucleotide characters are present, no results are returned, and a warning is printed.
 - Preserves letter case
 
 ### Examples
@@ -134,7 +134,7 @@ julia> transcribe("gattaca")
 julia> "gattaca" ▷ transcribe
 "gauuaca"
 ```
-See also [`▷`](@ref) [`isDNA`](@ref) [`complement`](@ref) [`reverse`](@ref) [`dsDNA`](@ref)
+See also [`▷`](@ref) [`isDNA`](@ref) [`complement`](@ref) [`reverse`](@ref) [`dsDNA`](@ref) [`translate`](@ref)
 """
 function transcribe(sequence)
 	if isDNA(sequence)
@@ -150,14 +150,14 @@ end
     dsDNA(sequence)
 	sequence ▷ dsDNA
 
-Returns plain text of a double stranded DNA sequence from a single strand input.
+Returns the double-stranded DNA sequence as plain text from a single-strand input.
 
 ### Arguments
-- `sequence`: string representing DNA.
+- `sequence`: a string representing DNA.
 
 ### Notes
 - Assuming the input sequence is conventional, i.e., 5'->3' coding strand, the resulting complementary sequence will be on the lower line, 3'->5' from left to right.
-- If non-DNA nucleotide characters are present, no results are returned and a warning is printed.
+- If non-DNA nucleotide characters are present, no results are returned, and a warning is printed.
 - Preserves letter case
 
 ### Examples
@@ -170,13 +170,13 @@ julia> "gattaca" ▷ dsDNA
 gattaca
 ctaatgt
 ```
-See also [`▷`](@ref) [`isDNA`](@ref) [`complement`](@ref) [`reverse`](@ref) [`transcribe`](@ref) [`Text`](@ref)
+See also [`▷`](@ref) [`Text`](@ref) [`isDNA`](@ref) [`complement`](@ref) [`reverse`](@ref) [`transcribe`](@ref) [`translate`](@ref)
 """
 function dsDNA(sequence)
 	if isDNA(sequence)
 		upper = sequence 
-		lower = sequence ▷ complement
-		return (upper * "\n" * lower) ▷ Text
+		lower = complement(sequence)
+		return Text((upper * "\n" * lower))
 	else
 		print("Warning: Input contains unknown DNA nucleotides.")
 	end
@@ -188,9 +188,9 @@ end
 
 Dictionary of RNA codons and their matching single letter amino acid counterparts.
 
-Adpated from [wikipedia](https://en.wikipedia.org/wiki/DNA_and_RNA_codon_tables#cite_note-12).
+Adapted from [wikipedia](https://en.wikipedia.org/wiki/DNA_and_RNA_codon_tables#cite_note-12).
 ### Usage
-To be used on conjunction with [`translate`](@ref).
+To be used in conjunction with [`translate`](@ref).
 """
 sgc = Dict(
 	"UUU"=>"F",
@@ -266,19 +266,15 @@ sgc = Dict(
 Returns the single-letter amino acid translation of a DNA sequence.
 
 ### Arguments
-- `sequence`: string representing DNA.
+- `sequence`: a string representing DNA.
 
 ### Notes
 - Assumes the input is a 5'->3' coding strand DNA. 
-- Searches for the first occuring standard start codon (ATG), then begins translation.
-- If no start codons are present, no results are returned and a warning is printed.
+- Removes new line characters for simple FASTA copy and paste.
+- Searches for the first occurring standard start codon (ATG), then begins translation.
+- If no start codons are present, no results are returned, and a warning is printed.
 - Stops translation at stop codons.
-- If non-DNA nucleotide characters are present, no results are returned and a warning is printed.
-
-### Tips
-If you are pasting in FASTA sequences that contain newlines `\\n\` remove them first, e.g. 
-
-`sequence = replace(sequence, "\\n\" => "")`
+- If non-DNA nucleotide characters are present, no results are returned, and a warning is printed.
 
 ### Examples
 ```julia-repl
@@ -291,6 +287,7 @@ julia> "atggattacaggtga" ▷ translate
 See also [`▷`](@ref) [`sgc`](@ref) [`isDNA`](@ref) [`complement`](@ref) [`reverse`](@ref) [`transcribe`](@ref) 
 """
 function translate(sequence)
+	sequence = replace(sequence, "\n" => "")
 	if isDNA(sequence)
 		sequence = uppercase(sequence)
 		sequence = transcribe(sequence)
@@ -340,13 +337,9 @@ sequence ▷ dsDNA
 sequence ▷ translate
 
 # ╔═╡ e955f658-dd39-4c79-8e4b-47d85b2eab2c
-# Real world demo
+# Real-world demo
 
-# Sequence of insulin from https://www.ncbi.nlm.nih.gov/nuccore/NC_000011.10?report=fasta&from=2159779&to=2161209&strand=true
-
-# Surprisingly short output. But the translate functionw will find the first standard start codon, and the first stop codon. So it will not be able to find the best open reading frame.
-
-# If you plug this same insulin sequence into https://web.expasy.org/translate/, "Frame 3" that is returned has the same results as this.
+# Sequence of human insulin from https://www.ncbi.nlm.nih.gov/nuccore/NC_000011.10?report=fasta&from=2159779&to=2161209&strand=true
 
 begin
 	insulin =
@@ -373,16 +366,23 @@ begin
 	CTACCAGCTGGAGAACTACTGCAACTAGACGCAGCCCGCAGGCAGCCCCACACCCGCCGCCTCCTGCACC
 	GAGAGAGATGGAATAAAGCCCTTGAACCAGC
 	""" 
-	insulin_clean = replace(insulin, "\n" => "") # remove new lines
-	insulin_clean ▷ translate
+	insulin ▷ translate
 end
 
+# Returns a surprisingly short output. But this translate function is designed to find the first standard start codon and the first stop codon after that. It will not be able to find the open reading frame that generates the longest or most accurate translation. So this function isn't very biologically relevant and would need further optimization for actual use.
+
+# If you plug this insulin sequence into https://web.expasy.org/translate/, the "Frame 3" result that is returned is the same result as this.
+
 # ╔═╡ 8612acd0-5cd6-4001-a0c0-124ff2d6e74e
- # Final notes
+# Final thoughts
 
-# I didn't have time to get into how to specify the input and return data types for the functions. The "sequence" variable could have be written as e.g. "sequence::AbstractString" to further specify the functions use.
+# I chose not to use the reassigned pipe character "▷" within functions for consistency with the formatting of most Base functions. But I believe most of the function steps here could also use ▷ pipes for easier readability.
 
-# For sure there is a better way to store or access the dictionary of codon-amino acid pairs, but I also thought that is outside the scope of the prompt.
+# I could imagine a direct translate function, without searching for a start codon, would also have utility. This would just require some simple editing of the function above.
+
+# I didn't have time to get into how to specify the input and return data types for the functions. The "sequence" variable could have been written as, e.g., "sequence::AbstractString" to further specify the function's use case.
+
+# For sure, there is a better way to store  access the dictionary of codon-amino acid pairs, but I also thought that is outside the scope of the prompt.
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
