@@ -166,7 +166,7 @@ end
 "atcgatGGGatctgac" ▷ dsDNA
 
 # ╔═╡ 8612acd0-5cd6-4001-a0c0-124ff2d6e74e
-# Final notes
+ # Final notes
 
 # I didn't have time to get into how to specify the input and return data types for the functions. The "sequence" variable could have be written as e.g. "sequence::AbstractString" to further specify the functions use.
 
